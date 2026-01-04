@@ -1,0 +1,60 @@
+The aim of this project is to investigate whether the market values of soccer players can be predicted primarily on the basis of their performance on the field. Market values, such as those published on Transfermarkt.de, play a central role in modern professional soccer. They serve as a guide for transfers, contract negotiations, and strategic squad planning. At the same time, they are difficult to grasp, as they are not based solely on measurable performance, but are also influenced by factors such as age, public perception, contract details, and market dynamics.
+The central question of this project is therefore: Is publicly available performance data from match operations sufficient to model market values in a meaningful way, or are these values too strongly influenced by external, unobservable factors?
+
+
+Data basis and data sources
+
+The target variable of the model is the market value of the players, which was obtained from Transfermarkt.de. Transfermarkt is one of the best-known platforms for player market values and is frequently used as a reference both in practice and in scientific work. For each season, a single market value was defined for each player, which is as close as possible to the end of the season in order to realistically reflect the performance of the respective season. For the 2024/25 season, for which no complete summer market value was yet available, the last known market value was used.
+The performance-related data comes from the FBref (Football Reference) database. This platform provides detailed seasonal statistics for players from the top 5 European leagues. Only field players (defenders, midfielders, and forwards) were taken into account, as goalkeepers have a significantly different evaluation logic. The statistics include offensive, defensive, and playmaking actions as well as minutes played.
+
+In addition, a popularity variable based on Wikipedia page views was integrated. This variable serves as a proxy for a player's public attention and media presence. Although Wikipedia views are not a direct performance indicator, they reflect how much public attention a player receives – an aspect that certainly plays a role in the real transfer market.
+The various data sets were merged based on player names and seasons. To avoid problems caused by different spellings or special characters, the player names were normalized in advance.
+
+
+Feature engineering and temporal smoothing
+
+A key problem in modeling market values is that they are not based solely on the performance of a single season. Rather, they often reflect a level of performance and expectations built up over several years. To account for this effect, a temporal smoothing approach was chosen.
+For key performance and usage variables, not only was the value for the current season used, but the value for the previous season was also taken into account. The smoothed variables were calculated as a weighted average of the current season (70%) and the previous season (30%). This prevents short-term outliers – such as injuries or unusually short playing times – from having a disproportionate influence on market value.
+
+The following variables were used in the final model:
+
+Age: Age of the player
+Min_smoothed: Smoothed minutes played
+log_wiki_views: Logarithmic Wikipedia page views
+Blocks_smoothed: Smoothed number of blocked actions
+Recov_smoothed: Smoothed ball recoveries
+PassDist_smoothed: Smoothed pass distance (playmaking)
+CarryDist_smoothed: Smoothed distance of ball carries
+Gls_smoothed: Smoothed goals
+SCA_50_smoothed: Smoothed shot-creating actions
+GCA_57_smoothed: Smoothed goal-creating actions
+Comp: League as a categorical variable
+
+These variables cover different facets of game performance: offensive productivity, involvement in build-up play, defensive work, frequency of use, and external perception.
+
+
+Model selection and training
+
+A random forest regression was used as the model. Random forests are particularly well suited for this application because they can map nonlinear relationships, are robust to outliers, and do not require strict distribution assumptions. They also allow for an analysis of variable relevance via permutation importance, which enables an intuitive interpretation of the model decisions.
+The target variable, market value, was logarithmized (log1p(market value)) to reduce the strong skewness of the market value distribution. Otherwise, players with extremely high market values would dominate the error and distort the model evaluation.
+The model was trained on several completed seasons and then evaluated on a separate season. This ensures that the results do not merely reproduce existing data, but reflect realistic predictive performance for new seasons.
+
+
+Results and interpretation
+
+The final model achieves an RMSE of around €12.5 million on the original market value scale. In logarithmic form, the log-RMSE is approximately 1.04. These values show that a relevant portion of the market value variation can be explained by performance and playing time data, even if no contract or salary information is available.
+The analysis of variable importance shows that age, playing time, and popularity in particular have a strong influence on market value estimation. Offensive metrics such as goals, shot-creating actions, and goal-creating actions also contribute significantly to the explanation. Defensive metrics are relevant but play a lesser role overall, which is consistent with the reality of the transfer market, where offensive productivity is often valued more highly.
+Overall, the model shows plausible behavior: young players with high playing time, visible game participation, and high public attention are valued more highly than older or less prominent players with less playing time.
+
+
+Classification and limitations of the approach
+
+The results of this project show that on-field data can make a substantial contribution to explaining market values. At the same time, it is clear that market values cannot be derived entirely from performance data. Factors such as contract terms, salary structures, injury histories, advisor networks, and the strategic interests of clubs are not taken into account in the model, as they are not publicly available or only available in incomplete form.
+These unobservable factors explain why even a well-performing model exhibits systematic deviations and why individual players appear to be overvalued or undervalued. The model should therefore not be understood as an exact representation of real market values, but rather as a data-based approximation that reveals the performance-related component of market value formation.
+
+
+Conclusion
+
+The project shows that it is fundamentally possible to model the market values of soccer players in a meaningful way using publicly available performance data. Even without contractual or financial information, clear patterns can be identified that explain a large part of the variation in market value. At the same time, the results illustrate that market values in professional soccer are not purely performance-driven, but rather the result of a complex interplay of athletic performance, commitment, age, and public perception.
+
+The chosen approach, with smoothed performance data and a random forest model, thus represents a practical method for analyzing market values based on data and highlighting discrepancies between performance and valuation - at least with openly available data.
